@@ -48,21 +48,24 @@ def run_rc(request):
     string_length = 4
     jobid = binascii.hexlify(os.urandom(string_length))
     message = ""
-    print(jobid)
-    print("111111111111111111111111111111111111111111111111111")
 
     try:
         if request.GET:
             boundary_geojson = request.GET.get("boundary_geojson", None)
             point_geojson = request.GET.get("point_geojson", None)
 
+            # extract xy from point_geojson content
+            import geojson
+            point_geojson_obj = geojson.loads(point_geojson)
+            xlon = point_geojson_obj.geometry.coordinates[0]
+            ylat = point_geojson_obj.geometry.coordinates[1]
+
             water_level = request.GET.get("water_level", None)
             prj = request.GET.get("prj", None)
 
 
             # Run RC()
-            #outletbasin_GEOJSON, msg = WD(jobid, xlon, ylat, prj)
-            RC_dict= RC(jobid, boundary_geojson, point_geojson, water_level, prj)
+            RC_dict= RC(jobid, boundary_geojson, xlon, ylat, water_level, prj)
 
 
             lake_GEOJSON = RC_dict["lake_GEOJSON"]

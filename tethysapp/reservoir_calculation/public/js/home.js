@@ -85,7 +85,7 @@ $(document).ready(function () {
     var ylat = 40.1;
     var xlon = -111.55;
     CenterMap(xlon,ylat);
-    map.getView().setZoom(10);
+    map.getView().setZoom(12);
 
 });
 
@@ -183,7 +183,7 @@ function run_rc() {
             reservoir_layer.getSource().addFeatures(geojson2feature(data.lake_data));
             displayStatus.removeClass('calculating');
             displayStatus.addClass('success');
-            displayStatus.html('<em>Success!</em>');
+            displayStatus.html('<em>Success! The reservoir volume is </em>'+ data.lake_volume + 'cubic meters.');
 
         },
         error: function (jqXHR, textStatus, errorThrown) {

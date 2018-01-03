@@ -13,7 +13,7 @@ GISDB = os.path.join(tempfile.gettempdir(), 'grassdata')
 OUTPUT_DATA_PATH = os.path.join(tempfile.gettempdir(), 'grassdata', "output_data")
 
 
-def RC(jobid, boundary_geojson, point_geojson, water_level, prj):
+def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
     dem_full_path = DEM_FULL_PATH
     dem = DEM_NAME
     gisbase = GISBASE
@@ -47,6 +47,9 @@ def RC(jobid, boundary_geojson, point_geojson, water_level, prj):
 
         water_level = float(water_level)
 
+        xlon = float(xlon)
+        ylat = float(ylat)
+
         # Set GISBASE environment variable
         os.environ['GISBASE'] = gisbase
         # the following not needed with trunk
@@ -65,6 +68,38 @@ def RC(jobid, boundary_geojson, point_geojson, water_level, prj):
 
         # launch session
         gsetup.init(gisbase, gisdb, location, mapset)
+
+        # Project xlon, ylat wgs84 into current
+        if prj.lower() != "native" or prj.lower() == "wgs84":
+            stats = gscript.read_command('m.proj', coordinates=(xlon, ylat), flags='i')
+            coor_list = stats.split("|")
+            xlon = float(coor_list[0])
+            ylat = float(coor_list[1])
+
+        # Define region
+        stats = gscript.parse_command('g.region', raster=dem, flags='p')
+
+        # Read extent of the dem file
+        for key in stats:
+            if "north:" in key:
+                north = float(key.split(":")[1])
+            elif "south:" in key:
+                south = float(key.split(":")[1])
+            elif "west:" in key:
+                west = float(key.split(":")[1])
+            elif "east:" in key:
+                east = float(key.split(":")[1])
+            elif "nsres:" in key:
+                nsres = float(key.split(":")[1])
+            elif "ewres:" in key:
+                ewres = float(key.split(":")[1])
+
+        # check if xlon, ylat is within the extent of dem
+        if xlon < west or xlon > east:
+            raise Exception("(xlon, ylat) is out of dem region.")
+        elif ylat < south or ylat > north:
+            raise Exception("(xlon, ylat) is out of dem region.")
+
 
         # Check the dem file, import if not exist
         dem_mapset_path = os.path.join(gisdb, location, mapset, "cell", dem)
@@ -102,19 +137,7 @@ def RC(jobid, boundary_geojson, point_geojson, water_level, prj):
         mapcalc_cmd = '{0} = if({1}, {2})'.format(dem_cropped, boundary_rast, dem)
         gscript.mapcalc(mapcalc_cmd, overwrite=True, quiet=True)
 
-        #extract xy from point_geojson content
-        import geojson
-        point_geojson_obj = geojson.loads(point_geojson)
-        point_xlon = point_geojson_obj.geometry.coordinates[0]
-        point_ylat = point_geojson_obj.geometry.coordinates[1]
-        point_coordinates = (point_xlon,point_ylat)
-
-        # # reprojcet 4326 to 3857
-        # stats = gscript.read_command('m.proj', coordinates=point_coordinates, flags='i')
-        # coor_list = stats.split("|")
-        # xlon_3857 = float(coor_list[0])
-        # ylat_3857 = float(coor_list[1])
-        # point_coordinates_3857 = (xlon_3857,ylat_3857)
+        point_coordinates = (xlon,ylat)
 
         # Read pour point elevation
         point_info = gscript.read_command('r.what', map=dem, coordinates=point_coordinates)
