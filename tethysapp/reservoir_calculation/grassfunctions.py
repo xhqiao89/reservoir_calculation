@@ -5,12 +5,13 @@ import tempfile
 from tempfile import mkstemp
 
 # Apache should have ownership and full permission over this path
-DEM_FULL_PATH = "/home/sherry/utahfiles/utah3857.tif"
-DEM_NAME = 'utah3857' # DEM layer name, no extension (no .tif)
-GISBASE = "/usr/lib/grass72" # full path to GRASS installation
+DEM_FULL_PATH = "/home/sherry/DR/dr3857.tif"
+DEM_NAME = 'dr3857' # DEM layer name, no extension (no .tif)
+GISBASE = "/usr/lib/grass75" # full path to GRASS installation
 GRASS7BIN = "grass" # command to start GRASS from shell
 GISDB = os.path.join(tempfile.gettempdir(), 'grassdata')
 OUTPUT_DATA_PATH = os.path.join(tempfile.gettempdir(), 'grassdata', "output_data")
+
 
 
 def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
@@ -45,11 +46,6 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
                 print >> sys.stderr, 'ERROR: Cannot generate location (%s)' % startcmd
                 sys.exit(-1)
 
-        water_level = float(water_level)
-
-        xlon = float(xlon)
-        ylat = float(ylat)
-
         # Set GISBASE environment variable
         os.environ['GISBASE'] = gisbase
         # the following not needed with trunk
@@ -69,12 +65,22 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
         # launch session
         gsetup.init(gisbase, gisdb, location, mapset)
 
+        water_level = float(water_level)
+        xlon = float(xlon)
+        ylat = float(ylat)
+
         # Project xlon, ylat wgs84 into current
         if prj.lower() != "native" or prj.lower() == "wgs84":
             stats = gscript.read_command('m.proj', coordinates=(xlon, ylat), flags='i')
             coor_list = stats.split("|")
             xlon = float(coor_list[0])
             ylat = float(coor_list[1])
+
+        # Check the dem file, import if not exist
+        dem_mapset_path = os.path.join(gisdb, location, mapset, "cell", dem)
+
+        if not os.path.exists(dem_mapset_path):
+            stats = gscript.read_command('r.in.gdal', flags='o', input=dem_full_path, output=dem)
 
         # Define region
         stats = gscript.parse_command('g.region', raster=dem, flags='p')
@@ -100,25 +106,9 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
         elif ylat < south or ylat > north:
             raise Exception("(xlon, ylat) is out of dem region.")
 
-
-        # Check the dem file, import if not exist
-        dem_mapset_path = os.path.join(gisdb, location, mapset, "cell", dem)
-
-        if not os.path.exists(dem_mapset_path):
-            stats = gscript.read_command('r.in.gdal', flags='o', input=dem_full_path, output=dem)
-
-        # Define region
-        stats = gscript.parse_command('g.region', raster=dem, flags='p')
-        # Read extent of the dem file
-        for key in stats:
-            if "nsres:" in key:
-                nsres = float(key.split(":")[1])
-            elif "ewres:" in key:
-                ewres = float(key.split(":")[1])
         # Calculate cell area
         cell_area = nsres * ewres
-        print("222222222222222222222222222222222222222222")
-        print(cell_area)
+        point_coordinates = (xlon,ylat)
 
         # write boundary_geojson content to geojson file
         fd, boundary_geojson_file_path = mkstemp()
@@ -136,8 +126,6 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
         dem_cropped = "{0}_{1}_cropped".format(dem, jobid)
         mapcalc_cmd = '{0} = if({1}, {2})'.format(dem_cropped, boundary_rast, dem)
         gscript.mapcalc(mapcalc_cmd, overwrite=True, quiet=True)
-
-        point_coordinates = (xlon,ylat)
 
         # Read pour point elevation
         point_info = gscript.read_command('r.what', map=dem, coordinates=point_coordinates)
@@ -177,12 +165,10 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
         stats = gscript.parse_command('v.out.ogr', input=lake_rast_all_vec, output=lake_rast_all_vec_GEOJSON, \
                                       format="GeoJSON", type="area", overwrite=True, flags="c")
 
-
         return {"lake_volume": lake_volume,
                 "lake_GEOJSON": lake_rast_all_vec_GEOJSON,
                 "msg": msg,
                 "status": "success"}
-
 
     except Exception as e:
         msg = e.message

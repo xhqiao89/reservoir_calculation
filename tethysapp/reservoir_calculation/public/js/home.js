@@ -1,7 +1,7 @@
 /**
  * Created by sherry on 12/29/17.
  */
-var map, pour_point_layer, boundary_layer, reservoir_layer;
+var map, pour_point_layer, boundary_layer, reservoir_layer, river_layer;
 var water_level;
 var polygon_draw, point_draw, polygon_source, point_source;
 var displayStatus = $('#display-status');
@@ -77,15 +77,28 @@ $(document).ready(function () {
     })
     });
 
+    river_layer = new ol.layer.Tile({
+        source: new ol.source.TileWMS({
+            //url: 'https://geoserver.byu.edu/arcgis/services/sherry/utah_streams1k/MapServer/WMSServer?',
+            url:'https://geoserver.byu.edu/arcgis/services/sherry/dr_streams/MapServer/WMSServer?',
+            params: {'LAYERS': '0'},
+            crossOrigin: 'anonymous'
+        }),
+        keyword: 'nwm'
+    });
+
     map.addLayer(bing_layer);
+    map.addLayer(river_layer);
     map.addLayer(pour_point_layer);
     map.addLayer(boundary_layer);
     map.addLayer(reservoir_layer);
 
-    var ylat = 40.1;
-    var xlon = -111.55;
+    // var ylat = 40.1;
+    // var xlon = -111.55;
+    var ylat = 18.9108;
+    var xlon = -71.2500;
     CenterMap(xlon,ylat);
-    map.getView().setZoom(12);
+    map.getView().setZoom(10);
 
 });
 
@@ -150,9 +163,9 @@ function run_rc() {
     map.removeInteraction(polygon_draw);
     map.removeInteraction(point_draw);
 
-    water_level=document.getElementById("waterLevel").value;
+    water_level = document.getElementById("waterLevel").value;
 
-    if (pour_point_layer.getSource().getFeatures().length ==0 || boundary_layer.getSource().getFeatures().length==0){
+    if (pour_point_layer.getSource().getFeatures().length == 0 || boundary_layer.getSource().getFeatures().length == 0) {
         displayStatus.addClass('error');
         displayStatus.html('<em>Error. Please select pour point AND draw polygon first. </em>');
         return
@@ -169,48 +182,31 @@ function run_rc() {
         displayStatus.html('<em>Calculating...</em>');
 
         $.ajax({
-        type: 'GET',
-        url: 'run',
-        dataType:'json',
-        data: {
+            type: 'GET',
+            url: 'run',
+            dataType: 'json',
+            data: {
                 'boundary_geojson': boundary_geojson,
                 'point_geojson': point_geojson,
-                'water_level':water_level,
-                'prj' : "native"
-        },
-        success: function (data) {
+                'water_level': water_level,
+                'prj': "native"
+            },
+            success: function (data) {
 
-            reservoir_layer.getSource().addFeatures(geojson2feature(data.lake_data));
-            displayStatus.removeClass('calculating');
-            displayStatus.addClass('success');
-            displayStatus.html('<em>Success! The reservoir volume is </em>'+ data.lake_volume + 'cubic meters.');
+                reservoir_layer.getSource().addFeatures(geojson2feature(data.lake_data));
+                map.getView().fit(reservoir_layer.getSource().getExtent(), map.getSize());
+                displayStatus.removeClass('calculating');
+                displayStatus.addClass('success');
+                displayStatus.html('<em>Success! The reservoir volume is </em>' + data.lake_volume + 'cubic meters.');
 
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            alert("Error");
-            displayStatus.removeClass('calculating');
-            displayStatus.addClass('error');
-            displayStatus.html('<em>' + errorThrown + '</em>');
-        }
-    });
-
-
-
-
-
-
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("Error");
+                displayStatus.removeClass('calculating');
+                displayStatus.addClass('error');
+                displayStatus.html('<em>' + errorThrown + '</em>');
+            }
+        });
     }
-
-
-
-
-//
-//     basin_layer.getSource().clear();
-//     snap_point_layer.getSource().clear();
-//
-//     displayStatus.removeClass('error');
-//     displayStatus.addClass('calculating');
-//     displayStatus.html('<em>Calculating...</em>');
-//
-
 }
+
