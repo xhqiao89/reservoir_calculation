@@ -172,8 +172,8 @@ def RC(jobid, boundary_geojson, xlon, ylat, water_level, prj):
 
     except Exception as e:
         msg = e.message
-        return {"outlet_snapped_geojson": None,
-                "lake_rast_all_vec_GEOJSON": None,
+        return {"lake_volume": None,
+                "lake_GEOJSON": None,
                 "msg": msg,
                 "status": "error"}
 
