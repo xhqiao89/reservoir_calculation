@@ -16,15 +16,15 @@ class reservoircalculationprocess(Process):
         inputs = [LiteralInput('point_x', 'Pour Point Longitude', data_type='float'),
                   LiteralInput('point_y', 'Pour Point Latitude', data_type='float'),
                   LiteralInput('water_level', 'Water level at pour point', data_type='float'),
-                  ComplexInput('max_boundary', 'Maximum Reservior Boundary', supported_formats=[Format('application/gml+xml')])]
+                  ComplexInput('max_boundary', 'Maximum Reservior Boundary', supported_formats=[Format('text/xml')])]
         outputs = [LiteralOutput('lake_volume', 'Reservoir volume in cubic meters', data_type='float'),
-            ComplexOutput('lake_boundary', 'Reservoir boundary polygon', supported_formats=[Format('application/gml+xml')])]
+            ComplexOutput('lake_boundary', 'Reservoir boundary polygon', supported_formats=[Format('text/xml')])]
 
         super(reservoircalculationprocess, self).__init__(
             self._handler,
             identifier='reservoircalculationprocess',
             title='Reservoir Calculation Service',
-            abstract='Place a brief description of your process here',
+            abstract='This process returns the boundary and storage capacity of a reservoir based on a given pour point location, an aimed water level, and maximum reservoir boundary polygon',
             version='1.0',
             inputs=inputs,
             outputs=outputs,

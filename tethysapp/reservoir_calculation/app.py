@@ -8,10 +8,10 @@ class ReservoirCalculation(TethysAppBase):
 
     name = 'Reservoir Calculation App'
     index = 'reservoir_calculation:home'
-    icon = 'reservoir_calculation/images/icon.gif'
+    icon = 'reservoir_calculation/images/reservoiricon.png'
     package = 'reservoir_calculation'
     root_url = 'reservoir-calculation'
-    color = '#27ae60'
+    color = '#33c1ff'
     description = 'Place a brief description of your app here.'
     tags = ''
     enable_feedback = False
