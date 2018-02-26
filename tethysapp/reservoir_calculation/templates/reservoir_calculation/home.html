@@ -22,20 +22,24 @@
 {% endblock %}
 
 {% block app_content %}
-  <h5>Welcome to Reservoir Calculation App!</h5>
-
-  <div id="map"></div>
+<div id="map"></div>
 {% endblock %}
 
 {% block app_navigation_items %}
-<h5>Step 1: click on the map to select an outlet</h5>
+<br>
+<p><b>Welcome to Reservoit Calculation for Dominican Republic App!</b></p>
+<br>
+<p>Step 1: Zoom in and click on the map to select an outlet.</p>
   {% gizmo button btnClickPoint %}
-<h5>Draw a polygon on the map to define the maximum reservior boundary</h5>
+
+<p>Step 2: Draw a polygon (double click to finish) on the map to define the maximum reservior boundary.</p>
 
   {% gizmo button btnDrawPolygon %}
-<h5>Input water level at pour point, then click "Calculate" button to run.</h5>
+
+<p>Step 3: Input a water level at the pour point, then click "Calculate" button to run.</p>
   {% gizmo text_input waterLevel %}
   {% gizmo button btnCalc %}
+
   <div id="display-status"></div>
 
 {% endblock %}
@@ -48,12 +52,15 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h5 class="modal-title" id="help-modal-label">Example Modal</h5>
+          <h5 class="modal-title" id="help-modal-label">Welcome to Reservoir Calculation for DR App!</h5>
         </div>
         <div class="modal-body">
-          <p>You can add custom buttons to the app header using the <code>header_buttons</code> block. Use anchor/link tags for the button and wrap it in a div with the class <code>header-button</code>. For buttons with the gliphyicons, add the <code>glyphicon-button</code> class as well.</p>
-          <p>Ever have trouble using a modal in a Tethys app? Use the <code>after_app_content</code> block for modal content to allow them to function properly. See: <a href="https://getbootstrap.com/javascript/#modals">Bootstrap Modals</a></p>
-          <p>Add tooltips to any element by adding the <code>data-toggle</code>, <code>data-placement</code>, and <code>title</code> attributes to the button. See: <a href="https://getbootstrap.com/javascript/#tooltips">Bootstrap Tooltips</a></p>
+          <p>This app allows you to calculate the reservoir boudary and volume with a designed pour point and water level in Dominican Republic country. Detailed steps includes:</p>
+          <p>First, you can zoom in/out of the map to find a pour point, then click on the map to draw a point.
+          Then, you can draw a polygon on the map to define the maximum reservior boundary. (<b>Note: You should click on the buttons everytime you want to draw a new point or polygon</b>)</p>
+          <p>Next, you can input a water level at the pour point, click "Calculate" button to run. </p>
+          <p>The formed reservoir boundary will show on the map and its volume will show as text below the "Calculate" button. </p>
+          <p>* Please make sure to select an outlet within the Dominican Republic Country.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

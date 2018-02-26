@@ -50,12 +50,12 @@ $(document).ready(function () {
     source: polygon_source,
     style: new ol.style.Style({
         stroke: new ol.style.Stroke({
-        color: 'blue',
+        color: '#0F08A6',
         lineDash: [4],
         width: 3
         }),
         fill: new ol.style.Fill({
-        color: 'rgba(0, 0, 255, 0.1)'
+        color: 'rgba(0, 0, 255, 0.3)'
         })
     })
     });
@@ -67,12 +67,12 @@ $(document).ready(function () {
     }),
     style: new ol.style.Style({
         stroke: new ol.style.Stroke({
-        color: 'green',
-        lineDash: [4],
-        width: 3
+        color: '#FF0000',
+        lineDash: [0],
+        width: 1
         }),
         fill: new ol.style.Fill({
-        color: 'rgba(0, 255, 0, 0.1)'
+        color: 'rgba(255, 0, 0, 0.5)'
         })
     })
     });
@@ -93,8 +93,6 @@ $(document).ready(function () {
     map.addLayer(boundary_layer);
     map.addLayer(reservoir_layer);
 
-    // var ylat = 40.1;
-    // var xlon = -111.55;
     var ylat = 18.9108;
     var xlon = -70.7500;
     CenterMap(xlon,ylat);
@@ -121,7 +119,13 @@ function addClickPoint(){
         source: point_source,
         type: 'Point'
       });
+
     map.addInteraction(point_draw);
+
+    point_draw.on('drawend', function(evt) {
+        //... unset sketch
+        map.removeInteraction(point_draw);
+    }, this);
 }
 
 function draw_polygon(value){
@@ -136,6 +140,11 @@ function draw_polygon(value){
         source: polygon_source,
         type: 'Polygon'
       });
+
+    polygon_draw.on('drawend', function(evt) {
+        //... unset sketch
+        map.removeInteraction(polygon_draw);
+    }, this);
       map.addInteraction(polygon_draw);
     }
   }
@@ -171,15 +180,12 @@ function run_rc() {
         return
 
     } else {
-        var point_geojson = feature2geojson(pour_point_layer.getSource().getFeatures()[0])
-        alert(point_geojson);
-        var boundary_geojson = feature2geojson(boundary_layer.getSource().getFeatures()[0])
-        alert(boundary_geojson);
+        var point_geojson = feature2geojson(pour_point_layer.getSource().getFeatures()[0]);
+        var boundary_geojson = feature2geojson(boundary_layer.getSource().getFeatures()[0]);
 
         displayStatus.removeClass('success');
         displayStatus.removeClass('error');
-        displayStatus.addClass('calculating');
-        displayStatus.html('<em>Calculating...</em>');
+        waiting_output();
 
         $.ajax({
             type: 'GET',
@@ -195,18 +201,22 @@ function run_rc() {
 
                 reservoir_layer.getSource().addFeatures(geojson2feature(data.lake_data));
                 map.getView().fit(reservoir_layer.getSource().getExtent(), map.getSize());
-                displayStatus.removeClass('calculating');
                 displayStatus.addClass('success');
                 displayStatus.html('<em>Success! The reservoir volume is </em>' + data.lake_volume + 'cubic meters.');
 
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 alert("Error");
-                displayStatus.removeClass('calculating');
                 displayStatus.addClass('error');
                 displayStatus.html('<em>' + errorThrown + '</em>');
             }
         });
     }
+}
+
+function waiting_output() {
+    var wait_text = "<strong>Reservoir calculating...</strong><br>" +
+        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src='/static/reservoir_calculation/images/earth_globe.gif'>";
+    document.getElementById('display-status').innerHTML = wait_text;
 }
 
