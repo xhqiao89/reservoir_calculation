@@ -1,6 +1,7 @@
 import os
 import binascii
 import json
+import geojson
 
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -55,7 +56,6 @@ def run_rc(request):
             point_geojson = request.GET.get("point_geojson", None)
 
             # extract xy from point_geojson content
-            import geojson
             point_geojson_obj = geojson.loads(point_geojson)
             xlon = point_geojson_obj.geometry.coordinates[0]
             ylat = point_geojson_obj.geometry.coordinates[1]
@@ -83,6 +83,8 @@ def run_rc(request):
 
     except Exception as ex:
         message = ex.message
+        print ex
+        print ex.message
 
     # Return inputs and results
     finally:
