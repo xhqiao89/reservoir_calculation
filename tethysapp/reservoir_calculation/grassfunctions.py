@@ -7,7 +7,7 @@ from tempfile import mkstemp
 # Apache should have ownership and full permission over this path
 DEM_FULL_PATH = "/home/sherry/DR/dr3857.tif"
 DEM_NAME = 'dr3857' # DEM layer name, no extension (no .tif)
-GISBASE = "/usr/lib/grass75" # full path to GRASS installation
+GISBASE = "/usr/lib/grass74" # full path to GRASS installation
 GRASS7BIN = "grass" # command to start GRASS from shell
 GISDB = os.path.join(tempfile.gettempdir(), 'grassdata')
 OUTPUT_DATA_PATH = os.path.join(tempfile.gettempdir(), 'grassdata', "output_data")
